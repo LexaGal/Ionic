@@ -40,5 +40,8 @@
     "ionic-plugin-keyboard"
   ],
   "cordovaPlatforms": [],
-  "-vs-binding":{"BeforeBuild":["ionic:build"]}
+  "-vs-binding": {
+    "BeforeBuild": [ "ionic:build" ],
+    "ProjectOpened": [ "ionic:build" ]
+  }
 }
