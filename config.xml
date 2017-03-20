@@ -96,4 +96,5 @@
   <plugin name="cordova-plugin-device" spec="1.1.4" />
   <plugin name="cordova-plugin-splashscreen" spec="~4.0.1" />
   <plugin name="cordova-plugin-geolocation" version="2.4.1" />
+  <plugin name="cordova-plugin-compat" version="1.1.0" />
 </widget>

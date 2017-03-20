@@ -1,6 +1,10 @@
+import { NgModule } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { Geolocation, Keyboard } from 'ionic-native';
+import { Http, Response } from '@angular/http';
+
 import { Weather } from '../../providers/weather';
-import { Component } from '@angular/core';
+import { CompleteTestService } from '../../providers/auto-complete';
 
 import { AlertController, LoadingController, NavController, Platform } from 'ionic-angular';
 
@@ -8,19 +12,58 @@ import { AlertController, LoadingController, NavController, Platform } from 'ion
     selector: 'page-home',
     templateUrl: 'home.html'
 })
+
 export class HomePage {
 
-    degreeStr: string = ' degrees (F)';
+    degreeStr: string = ' degrees (C)';
     //an empty object (for now) to store our location data passed to the API
     currentLoc: any = {};
     //current weather items array
     c_items: Array<any> = [];
+    //Mapped to the search field
+    //searchInput: string = '';
+    @ViewChild('searchbar') searchbar: any;
+
+    //all cities
+    //cities: Array<any> = [];
 
     constructor(public alertController: AlertController,
         public loadingCtrl: LoadingController,
         public platform: Platform,
         public weather: Weather,
-        public navCtrl: NavController) {
+        public navCtrl: NavController,
+        public http: Http,
+        public completeTestService: CompleteTestService) {
+
+        //this.http.get("/assets/city.list.json")
+        //    .toPromise()
+        //    .then((data: any) => {
+        //        this.cities = [];
+        //        this.cities = data.json(); //.slice(0, 1000);
+        //    })
+        //    .catch(this.handleError);
+    }
+
+    private handleError(res: Response | any) {
+        console.error('Entering handleError');
+        console.dir(res);
+        return Promise.reject(res.message || res);
+    }
+
+    setCityName() {
+        //whenever the user enters a zip code, replace the current location
+        //with the entered value, then show current weather for the selected
+        //location.
+        //Hide the keyboard if it's open, just in case
+        Keyboard.close();
+        //Populate the currentLoc variable with the city name
+        this.currentLoc = {
+            'name': this.searchbar.getValue()
+        }; //this.searchInput };
+        //Clear the Zip Code input field
+        //this.searchInput = '';
+        //get the weather for the specified city
+        this.showCurrent();
     }
 
     onLink(url: string) {
@@ -76,25 +119,25 @@ export class HomePage {
         loader.present();
         this.weather.getCurrent(this.currentLoc)
             .then(
-                data => {
-                    //Hide the loading indicator
-                    loader.dismiss();
-                    //Now, populate the array with data from the weather service
-                    if (data) {
-                        //We have data, so lets do something with it
-                        this.c_items = this.formatWeatherData(data);
-                    } else {
-                        //This really should never happen
-                        console.error('Error retrieving weather data: Data object is empty');
-                    }
-                },
-                error => {
-                    //Hide the loading indicator
-                    loader.dismiss();
-                    console.error('Error retrieving weather data');
-                    console.dir(error);
-                    this.showAlert(error);
+            data => {
+                //Hide the loading indicator
+                loader.dismiss();
+                //Now, populate the array with data from the weather service
+                if (data) {
+                    //We have data, so lets do something with it
+                    this.c_items = this.formatWeatherData(data);
+                } else {
+                    //This really should never happen
+                    console.error('Error retrieving weather data: Data object is empty');
                 }
+            },
+            error => {
+                //Hide the loading indicator
+                loader.dismiss();
+                console.error('Error retrieving weather data');
+                console.dir(error);
+                this.showAlert(error);
+            }
             );
     }
 

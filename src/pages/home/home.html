@@ -10,22 +10,43 @@
         </ion-title>
     </ion-toolbar>
 </ion-header>
-
+<div></div>
 <ion-content padding>
+    <form (ngSubmit)="setCityName()">
+        <!--<ion-item>            <!--<ion-label>Type any city name:</ion-label>--><!--<ion-input type="text" [(ngModel)]="searchInput" name="IdCode"></ion-input>--><!--</ion-item>-->
+        <ion-auto-complete #searchbar [dataProvider]="completeTestService"></ion-auto-complete>
+        <button ion-button icon-left block>
+            <ion-icon name="search"></ion-icon>
+            Find Weather
+        </button>
+    </form>
     <ion-list no-lines>
         <!--show this if there are no items in the list-->
         <ion-item [hidden]="c_items.length > 0">
-            <p><strong>Weather data is not available</strong></p>
+            <p>
+                <strong>Weather data is not available</strong>
+            </p>
         </ion-item>
         <!--Display the current conditions data we have -->
         <ion-item *ngFor="let c_item of c_items">
-            <p><strong>{{c_item.name}}:</strong> {{c_item.value}}</p>
+            <p>
+                <strong>{{c_item.name}}:</strong> {{c_item.value}}
+            </p>
         </ion-item>
     </ion-list>
 </ion-content>
+<button icon-button block>Refresh areas</button>
+<ion-item *ngFor="let city of cities">
+    <p>                <strong>{{city._id}}, </strong>{{city.name}} ({{city.country}})</p>
+</ion-item>
 
+<form (ngSubmit)="sendWeather()">
+    <button ion-button block>
+        Send to plantsarea
+    </button>
+</form>
 <ion-footer>
     <ion-toolbar>
-        <ion-title>Visual Studio Tools for Apache Cordova</ion-title>
+        <ion-title>Plantsareas weather loader application</ion-title>
     </ion-toolbar>
 </ion-footer>

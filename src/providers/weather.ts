@@ -36,15 +36,17 @@ export class Weather {
         if (loc.long) {
             //then use the 'grographical coordinates' version of the API
             uri += '?lat=' + loc.lat + '&lon=' + loc.long;
-        } else {
-            //Otherwise, use the zip code
-            uri += '?zip=' + loc.zip;
+        } else if (loc.id) {
+            //Otherwise, use the id code
+            uri += '?id=' + loc.id;
+        } else if (loc.name) {
+            uri += '?q=' + loc.name;
         }
 
         //Configure output for imperial (English) measurements
-        uri += '&units=imperial';
+        //uri += '&units=imperial';
         //Use the following instead for metric
-        //uri += '&units=metric';
+        uri += '&units=metric';
 
         //Append the API Key to the end of the URI
         uri += '&APPID=' + this.weatherKey;
