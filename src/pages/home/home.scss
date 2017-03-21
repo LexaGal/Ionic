@@ -45,6 +45,14 @@ page-home {
       -webkit-border-radius:100%;
     }
 
+    ion-item {
+        ion-input.doc {
+            .input-cover {
+                left: 45px;
+            }
+        }
+    }
+
     @-webkit-keyframes spin {
         0% {
             -webkit-transform: rotate(0deg);

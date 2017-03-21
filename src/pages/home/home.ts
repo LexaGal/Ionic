@@ -25,7 +25,7 @@ export class HomePage {
         public weather: WeatherProvider,
         public mongoApi: MongolabDataApi,
         public completeService: CompleteService) {
-
+        
         mongoApi.loadDocs()
             .then((data: any) => {
                 this.documents = [];
@@ -46,11 +46,11 @@ export class HomePage {
         
     }
 
-    setCityName() {
+    setCityName(name) {
         Keyboard.close();
         this.currentLoc = {
-            'name': this.searchbar.getValue()
-        };
+            'name': name ? name : this.searchbar.getValue()
+    };
         this.showCurrent();
     }
 
@@ -77,7 +77,8 @@ export class HomePage {
         let locOptions = { 'maximumAge': 3000, 'timeout': 5000, 'enableHighAccuracy': true };
         Geolocation.getCurrentPosition(locOptions)
             .then(pos => {
-                this.currentLoc = { 'lat': pos.coords.latitude, 'long': pos.coords.longitude };
+                this.currentLoc = //{'name' : "Hrodna"}
+                    { 'lat': pos.coords.latitude, 'long': pos.coords.longitude };
                 this.showCurrent();
             })
             .catch(e => {

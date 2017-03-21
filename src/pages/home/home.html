@@ -31,17 +31,18 @@
             </p>
         </ion-item>
     </ion-list>
+    <ion-list no-lines>
+        <ion-item *ngFor="let doc of documents">
+            <ion-input class="doc" [(ngModel)]="doc.name" name="title" readonly></ion-input>
+            <ion-checkbox checked="false" [(ngModel)]="doc.checked"></ion-checkbox>
+        </ion-item>
+    </ion-list>
+
     <button ion-button block (ngClick)="refrehsAreas()">Refresh areas</button>
-    <ion-item *ngFor="let doc of documents">
-        <p>
-            <strong>{{doc.name}}</strong>
-        </p>
-        <ion-checkbox checked="false" [(ngModel)]="doc.checked"></ion-checkbox>
-    </ion-item>
 
     <form (ngSubmit)="sendWeather()">
         <button ion-button block>
-            Send to plantsarea
+            Send to plantsareas
         </button>
     </form>
 
