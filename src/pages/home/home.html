@@ -20,14 +20,14 @@
         </button>
     </form>
     <ion-list no-lines>
-        <ion-item [hidden]="cItems.length > 0">
+        <ion-item [hidden]="weatherItems.length > 0">
             <p>
                 <strong>Weather data is not available</strong>
             </p>
         </ion-item>
-        <ion-item *ngFor="let item of cItems">
+        <ion-item *ngFor="let item of weatherItems">
             <p>
-                <strong>{{item.name}}:</strong> {{item.value}}
+                <strong>{{item.Name}}:</strong> {{item.Value}}{{item.Ext}}
             </p>
         </ion-item>
     </ion-list>
@@ -38,7 +38,7 @@
         </ion-item>
     </ion-list>
 
-    <button ion-button block (ngClick)="refrehsAreas()">Refresh areas</button>
+    <button ion-button block (ngClick)="refrehsAreas()">Refresh</button>
 
     <form (ngSubmit)="sendWeather()">
         <button ion-button block>

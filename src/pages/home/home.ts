@@ -1,9 +1,13 @@
 import { NgModule } from '@angular/core';
 import { Component, ViewChild } from '@angular/core';
 import { Geolocation, Keyboard } from 'ionic-native';
-import { Http, Response } from '@angular/http'; import { WeatherProvider } from '../../providers/WeatherProvider';
+import { Http, Response, Headers } from '@angular/http';
+
+import { WeatherProvider } from '../../providers/WeatherProvider';
 import { CompleteService } from '../../providers/CompleteService';
-import { MongolabDataApi } from '../../providers/MongolabDataApi'; import { AlertController, LoadingController, NavController, Platform } from 'ionic-angular';
+import { MongolabDataApi } from '../../providers/MongolabDataApi';
+
+import { AlertController, LoadingController, NavController, Platform } from 'ionic-angular';
 
 @Component({
     selector: 'page-home',
@@ -12,10 +16,18 @@ import { MongolabDataApi } from '../../providers/MongolabDataApi'; import { Aler
 export class HomePage {
     degreeStr: string = ' degrees (C)';
     currentLoc: any = {};
-    cItems: Array<any> = [];
+
+    weatherItems: Array<any> = [];
+    documents: Array<any> = [];
+
     @ViewChild('searchbar')
     searchbar: any;
-    documents: Array<any> = [];
+
+    private baseServerUr: string = "http://localhost:63958/";
+
+    private apis: any = {
+        setWeather: 'api/weather/set'
+    }
 
     constructor(public alertController: AlertController,
         public loadingCtrl: LoadingController,
@@ -25,15 +37,8 @@ export class HomePage {
         public weather: WeatherProvider,
         public mongoApi: MongolabDataApi,
         public completeService: CompleteService) {
-        
-        mongoApi.loadDocs()
-            .then((data: any) => {
-                this.documents = [];
-                this.documents = data.json();
-                this.documents.forEach((doc) => {
-                    doc['checked'] = false;
-                });
-            });
+
+        this.refreshAreas();
     }
 
     private handleError(res: Response | any) {
@@ -42,15 +47,45 @@ export class HomePage {
         return Promise.reject(res.message || res);
     }
 
-    refrehsAreas() {
-        
+    refreshAreas() {
+        this.mongoApi.loadDocs()
+            .then((data: any) => {
+                this.documents = [];
+                this.documents = data.json();
+                this.documents.forEach((doc) => {
+                    doc['checked'] = false;
+                });
+            });
+    }
+    
+    sendWeather() {
+        let docs = this.documents.filter(item => item.checked);
+        let data = {
+            AreasIds: docs.map(item => item._id),
+            WeatherItems: this.weatherItems.map(item =>
+                ({
+                    Name: item.Name,
+                    Value: typeof item.Value !== 'string' ? JSON.stringify(item.Value) : item.Value
+                }))
+        };
+        var params = JSON.stringify(data);
+
+        var headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+
+        this.http.post(this.baseServerUr + this.apis.setWeather,
+            params, {
+                headers: headers
+            })
+            .toPromise()
+            .catch(this.handleError);
     }
 
     setCityName(name) {
         Keyboard.close();
         this.currentLoc = {
             'name': name ? name : this.searchbar.getValue()
-    };
+        };
         this.showCurrent();
     }
 
@@ -91,55 +126,55 @@ export class HomePage {
     }
 
     showCurrent() {
-        this.cItems = [];
+        this.weatherItems = [];
         let loader = this.loadingCtrl.create({
             content: "Retrieving current conditions..."
         });
         loader.present();
         this.weather.getCurrent(this.currentLoc)
             .then(
-                data => {
-                    loader.dismiss();
-                    if (data) {
-                        this.cItems = this.formatWeatherData(data);
-                    } else {
-                        console.error('Error retrieving weather data: Data object is empty');
-                    }
-                },
-                error => {
-                    loader.dismiss();
-                    console.error('Error retrieving weather data');
-                    console.dir(error);
-                    this.showAlert(error);
+            data => {
+                loader.dismiss();
+                if (data) {
+                    this.weatherItems = this.formatWeatherData(data);
+                } else {
+                    console.error('Error retrieving weather data: Data object is empty');
                 }
+            },
+            error => {
+                loader.dismiss();
+                console.error('Error retrieving weather data');
+                console.dir(error);
+                this.showAlert(error);
+            }
             );
     }
 
     private formatWeatherData(data): any {
         let tmpArray = [];
         if (data.name) {
-            tmpArray.push({ 'name': 'Location', 'value': data.name });
+            tmpArray.push({ 'Name': 'Location', 'Value': data.name });
         }
-        tmpArray.push({ 'name': 'Temperature', 'value': data.main.temp + this.degreeStr });
-        tmpArray.push({ 'name': 'Low', 'value': data.main.temp_min + this.degreeStr });
-        tmpArray.push({ 'name': 'High', 'value': data.main.temp_max + this.degreeStr });
-        tmpArray.push({ 'name': 'Humidity', 'value': data.main.humidity + '%' });
-        tmpArray.push({ 'name': 'Pressure', 'value': data.main.pressure + ' hPa' });
-        tmpArray.push({ 'name': 'Wind', 'value': data.wind.speed + ' mph' });
+        tmpArray.push({ 'Name': 'Temperature', 'Value': data.main.temp, 'Ext': this.degreeStr });
+        tmpArray.push({ 'Name': 'Low', 'Value': data.main.temp_min, 'Ext': this.degreeStr });
+        tmpArray.push({ 'Name': 'High', 'Value': data.main.temp_max, 'Ext': this.degreeStr });
+        tmpArray.push({ 'Name': 'Humidity', 'Value': data.main.humidity, 'Ext': ' %' });
+        tmpArray.push({ 'Name': 'Pressure', 'Value': data.main.pressure, 'Ext': ' hPa' });
+        tmpArray.push({ 'Name': 'Wind', 'Value': data.wind.speed, 'Ext': ' mph' });
         if (data.visibility) {
-            tmpArray.push({ 'name': 'Visibility', 'value': data.visibility + ' meters' });
+            tmpArray.push({ 'Name': 'Visibility', 'Value': data.visibility, 'Ext': ' meters' });
         }
         if (data.sys.sunrise) {
             var sunriseDate = new Date(data.sys.sunrise * 1000);
-            tmpArray.push({ 'name': 'Sunrise', 'value': sunriseDate.toLocaleTimeString() });
+            tmpArray.push({ 'Name': 'Sunrise', 'Value': sunriseDate.toLocaleTimeString() });
         }
         if (data.sys.sunset) {
             var sunsetDate = new Date(data.sys.sunset * 1000);
-            tmpArray.push({ 'name': 'Sunset', 'value': sunsetDate.toLocaleTimeString() });
+            tmpArray.push({ 'Name': 'Sunset', 'Value': sunsetDate.toLocaleTimeString() });
         }
         if (data.coord) {
-            tmpArray.push({ 'name': 'Latitude', 'value': data.coord.lat });
-            tmpArray.push({ 'name': 'Longitude', 'value': data.coord.lon });
+            tmpArray.push({ 'Name': 'Latitude', 'Value': data.coord.lat });
+            tmpArray.push({ 'Name': 'Longitude', 'Value': data.coord.lon });
         }
         return tmpArray;
     }
