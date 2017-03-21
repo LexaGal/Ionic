@@ -3,7 +3,7 @@ import { Http, Response } from '@angular/http';
 import { Injectable } from "@angular/core";
 
 @Injectable()
-export class CompleteTestService implements AutoCompleteService {
+export class CompleteService implements AutoCompleteService {
 
     labelAttribute = "name";
     cities: Array<any> = [];
@@ -13,7 +13,7 @@ export class CompleteTestService implements AutoCompleteService {
             .toPromise()
             .then((data: any) => {
                 this.cities = [];
-                this.cities = data.json(); //.slice(0, 1000);
+                this.cities = data.json();
             })
             .catch(this.handleError);
     }
@@ -28,13 +28,6 @@ export class CompleteTestService implements AutoCompleteService {
         return this.cities.filter(item => item.name
             .toLowerCase()
             .startsWith(keyword.toLowerCase()))
-        .map(item => ({ name: (item.name + ", " + item.country) }));
-
-        //this.http.get("https://restcountries.eu/rest/v1/name/"+keyword)
-        //.map(
-        //  result => {
-        //      return result.json()
-        //          .filter(item => item.name.toLowerCase().startsWith(keyword.toLowerCase()));
-        //  });
+        .map(item => ({ name: (item.name + ", " + item.country) }));        
     }
 }

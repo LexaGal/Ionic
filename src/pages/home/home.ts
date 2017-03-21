@@ -1,47 +1,39 @@
 import { NgModule } from '@angular/core';
 import { Component, ViewChild } from '@angular/core';
 import { Geolocation, Keyboard } from 'ionic-native';
-import { Http, Response } from '@angular/http';
-
-import { Weather } from '../../providers/weather';
-import { CompleteTestService } from '../../providers/auto-complete';
-
-import { AlertController, LoadingController, NavController, Platform } from 'ionic-angular';
+import { Http, Response } from '@angular/http'; import { WeatherProvider } from '../../providers/WeatherProvider';
+import { CompleteService } from '../../providers/CompleteService';
+import { MongolabDataApi } from '../../providers/MongolabDataApi'; import { AlertController, LoadingController, NavController, Platform } from 'ionic-angular';
 
 @Component({
     selector: 'page-home',
     templateUrl: 'home.html'
 })
-
 export class HomePage {
-
     degreeStr: string = ' degrees (C)';
-    //an empty object (for now) to store our location data passed to the API
     currentLoc: any = {};
-    //current weather items array
-    c_items: Array<any> = [];
-    //Mapped to the search field
-    //searchInput: string = '';
-    @ViewChild('searchbar') searchbar: any;
-
-    //all cities
-    //cities: Array<any> = [];
+    cItems: Array<any> = [];
+    @ViewChild('searchbar')
+    searchbar: any;
+    documents: Array<any> = [];
 
     constructor(public alertController: AlertController,
         public loadingCtrl: LoadingController,
         public platform: Platform,
-        public weather: Weather,
         public navCtrl: NavController,
         public http: Http,
-        public completeTestService: CompleteTestService) {
+        public weather: WeatherProvider,
+        public mongoApi: MongolabDataApi,
+        public completeService: CompleteService) {
 
-        //this.http.get("/assets/city.list.json")
-        //    .toPromise()
-        //    .then((data: any) => {
-        //        this.cities = [];
-        //        this.cities = data.json(); //.slice(0, 1000);
-        //    })
-        //    .catch(this.handleError);
+        mongoApi.loadDocs()
+            .then((data: any) => {
+                this.documents = [];
+                this.documents = data.json();
+                this.documents.forEach((doc) => {
+                    doc['checked'] = false;
+                });
+            });
     }
 
     private handleError(res: Response | any) {
@@ -50,19 +42,15 @@ export class HomePage {
         return Promise.reject(res.message || res);
     }
 
+    refrehsAreas() {
+        
+    }
+
     setCityName() {
-        //whenever the user enters a zip code, replace the current location
-        //with the entered value, then show current weather for the selected
-        //location.
-        //Hide the keyboard if it's open, just in case
         Keyboard.close();
-        //Populate the currentLoc variable with the city name
         this.currentLoc = {
             'name': this.searchbar.getValue()
-        }; //this.searchInput };
-        //Clear the Zip Code input field
-        //this.searchInput = '';
-        //get the weather for the specified city
+        };
         this.showCurrent();
     }
 
@@ -71,17 +59,12 @@ export class HomePage {
     }
 
     ionViewDidLoad() {
-        //Once the main view loads
-        //and after the platform is ready...
         this.platform.ready()
             .then(() => {
-                //Setup a resume event listener
                 document.addEventListener('resume',
                     () => {
-                        //Get the local weather when the app resumes
                         this.getLocalWeather();
                     });
-                //Populate the form with the current location data
                 this.getLocalWeather();
             });
     }
@@ -94,9 +77,7 @@ export class HomePage {
         let locOptions = { 'maximumAge': 3000, 'timeout': 5000, 'enableHighAccuracy': true };
         Geolocation.getCurrentPosition(locOptions)
             .then(pos => {
-                //Store our location object for later use
                 this.currentLoc = { 'lat': pos.coords.latitude, 'long': pos.coords.longitude };
-                //and ask for the weather for the current location
                 this.showCurrent();
             })
             .catch(e => {
@@ -109,44 +90,33 @@ export class HomePage {
     }
 
     showCurrent() {
-        //clear out the previous array contents
-        this.c_items = [];
-        //Create the loading indicator
+        this.cItems = [];
         let loader = this.loadingCtrl.create({
             content: "Retrieving current conditions..."
         });
-        //Show the loading indicator
         loader.present();
         this.weather.getCurrent(this.currentLoc)
             .then(
-            data => {
-                //Hide the loading indicator
-                loader.dismiss();
-                //Now, populate the array with data from the weather service
-                if (data) {
-                    //We have data, so lets do something with it
-                    this.c_items = this.formatWeatherData(data);
-                } else {
-                    //This really should never happen
-                    console.error('Error retrieving weather data: Data object is empty');
+                data => {
+                    loader.dismiss();
+                    if (data) {
+                        this.cItems = this.formatWeatherData(data);
+                    } else {
+                        console.error('Error retrieving weather data: Data object is empty');
+                    }
+                },
+                error => {
+                    loader.dismiss();
+                    console.error('Error retrieving weather data');
+                    console.dir(error);
+                    this.showAlert(error);
                 }
-            },
-            error => {
-                //Hide the loading indicator
-                loader.dismiss();
-                console.error('Error retrieving weather data');
-                console.dir(error);
-                this.showAlert(error);
-            }
             );
     }
 
     private formatWeatherData(data): any {
-        //create a blank array to hold our results
         let tmpArray = [];
-        //Add the weather data values to the array
         if (data.name) {
-            //Location name will only be available for current conditions
             tmpArray.push({ 'name': 'Location', 'value': data.name });
         }
         tmpArray.push({ 'name': 'Temperature', 'value': data.main.temp + this.degreeStr });
@@ -155,11 +125,9 @@ export class HomePage {
         tmpArray.push({ 'name': 'Humidity', 'value': data.main.humidity + '%' });
         tmpArray.push({ 'name': 'Pressure', 'value': data.main.pressure + ' hPa' });
         tmpArray.push({ 'name': 'Wind', 'value': data.wind.speed + ' mph' });
-        //Do we have visibility data?
         if (data.visibility) {
             tmpArray.push({ 'name': 'Visibility', 'value': data.visibility + ' meters' });
         }
-        //do we have sunrise/sunset data?
         if (data.sys.sunrise) {
             var sunriseDate = new Date(data.sys.sunrise * 1000);
             tmpArray.push({ 'name': 'Sunrise', 'value': sunriseDate.toLocaleTimeString() });
@@ -168,13 +136,10 @@ export class HomePage {
             var sunsetDate = new Date(data.sys.sunset * 1000);
             tmpArray.push({ 'name': 'Sunset', 'value': sunsetDate.toLocaleTimeString() });
         }
-        //Do we have a coordinates object? only if we passed it in on startup
         if (data.coord) {
-            //Then grab long and lat
             tmpArray.push({ 'name': 'Latitude', 'value': data.coord.lat });
             tmpArray.push({ 'name': 'Longitude', 'value': data.coord.lon });
         }
-        //Return the new array to the calling function
         return tmpArray;
     }
 

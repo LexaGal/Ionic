@@ -1,10 +1,12 @@
-import { Weather } from '../providers/weather';
 import { NgModule, ErrorHandler } from '@angular/core';
 import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
 import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
-import { CompleteTestService } from '../providers/auto-complete';
+
+import { WeatherProvider } from '../providers/WeatherProvider';
+import { CompleteService } from '../providers/CompleteService';
 import { AUTOCOMPLETE_DIRECTIVES, AUTOCOMPLETE_PIPES } from 'ionic2-auto-complete';
+import { MongolabDataApi } from '../providers/MongolabDataApi';
 
 @NgModule({
     declarations: [
@@ -21,6 +23,6 @@ import { AUTOCOMPLETE_DIRECTIVES, AUTOCOMPLETE_PIPES } from 'ionic2-auto-complet
         MyApp,
         HomePage
     ],
-    providers: [Weather, CompleteTestService, { provide: ErrorHandler, useClass: IonicErrorHandler }]
+    providers: [WeatherProvider, CompleteService, MongolabDataApi, { provide: ErrorHandler, useClass: IonicErrorHandler }]
 })
 export class AppModule { }

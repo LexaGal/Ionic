@@ -6,47 +6,47 @@
             </button>
         </ion-buttons>
         <ion-title>
-            Weather App (Ionic 2)
+            Plants weather App
         </ion-title>
     </ion-toolbar>
 </ion-header>
 <div></div>
 <ion-content padding>
     <form (ngSubmit)="setCityName()">
-        <!--<ion-item>            <!--<ion-label>Type any city name:</ion-label>--><!--<ion-input type="text" [(ngModel)]="searchInput" name="IdCode"></ion-input>--><!--</ion-item>-->
-        <ion-auto-complete #searchbar [dataProvider]="completeTestService"></ion-auto-complete>
+        <ion-auto-complete #searchbar [dataProvider]="completeService"></ion-auto-complete>
         <button ion-button icon-left block>
             <ion-icon name="search"></ion-icon>
-            Find Weather
+            Load Weather
         </button>
     </form>
     <ion-list no-lines>
-        <!--show this if there are no items in the list-->
-        <ion-item [hidden]="c_items.length > 0">
+        <ion-item [hidden]="cItems.length > 0">
             <p>
                 <strong>Weather data is not available</strong>
             </p>
         </ion-item>
-        <!--Display the current conditions data we have -->
-        <ion-item *ngFor="let c_item of c_items">
+        <ion-item *ngFor="let item of cItems">
             <p>
-                <strong>{{c_item.name}}:</strong> {{c_item.value}}
+                <strong>{{item.name}}:</strong> {{item.value}}
             </p>
         </ion-item>
     </ion-list>
-</ion-content>
-<button icon-button block>Refresh areas</button>
-<ion-item *ngFor="let city of cities">
-    <p>                <strong>{{city._id}}, </strong>{{city.name}} ({{city.country}})</p>
-</ion-item>
+    <button ion-button block (ngClick)="refrehsAreas()">Refresh areas</button>
+    <ion-item *ngFor="let doc of documents">
+        <p>
+            <strong>{{doc.name}}</strong>
+        </p>
+        <ion-checkbox checked="false" [(ngModel)]="doc.checked"></ion-checkbox>
+    </ion-item>
 
-<form (ngSubmit)="sendWeather()">
-    <button ion-button block>
-        Send to plantsarea
-    </button>
-</form>
+    <form (ngSubmit)="sendWeather()">
+        <button ion-button block>
+            Send to plantsarea
+        </button>
+    </form>
+
+</ion-content>
 <ion-footer>
     <ion-toolbar>
-        <ion-title>Plantsareas weather loader application</ion-title>
     </ion-toolbar>
 </ion-footer>
