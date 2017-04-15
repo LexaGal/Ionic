@@ -1,50 +1,119 @@
-<ion-header>
+﻿<ion-header>
     <ion-toolbar>
+        <ion-title>
+            Plants weather App
+        </ion-title>
         <ion-buttons right>
             <button ion-button (click)="refreshPage()">
                 <ion-icon name="refresh"></ion-icon>
             </button>
+            <div *ngIf="loggedIn">
+                <button ion-button (click)="logOut()">
+                    LogOut
+                </button>
+            </div>
         </ion-buttons>
-        <ion-title>
-            Plants weather App
-        </ion-title>
     </ion-toolbar>
+    <!-- <ion-label (ngModel)="user.name">!</ion-label>
+        bar-button-icon-rightclass="buttonblock"-->
 </ion-header>
 <div></div>
+
 <ion-content padding>
-    <form (ngSubmit)="setCityName()">
-        <ion-auto-complete #searchbar [dataProvider]="completeService"></ion-auto-complete>
-        <button ion-button icon-left block>
-            <ion-icon name="search"></ion-icon>
-            Load Weather
-        </button>
-    </form>
-    <ion-list no-lines>
-        <ion-item [hidden]="weatherItems.length > 0">
-            <p>
-                <strong>Weather data is not available</strong>
-            </p>
-        </ion-item>
-        <ion-item *ngFor="let item of weatherItems">
-            <p>
-                <strong>{{item.Name}}:</strong> {{item.Value}}{{item.Ext}}
-            </p>
-        </ion-item>
-    </ion-list>
-    <ion-list no-lines>
-        <ion-item *ngFor="let doc of documents">
-            <ion-input class="doc" [(ngModel)]="doc.name" name="title" readonly></ion-input>
+    <div *ngIf="!loggedIn" class="panel">
+        <section class="sample-app-content">
+            <div class="container">
+                <h1>Please, Log in first</h1>
+                <!--TemplateBasedion-ion--->
+                <form #f="ngForm" (ngSubmit)="logInSubmit()" class="form-group">
+                    <p>
+                        <ion-label>Email:</ion-label>
+                        <input type="email" [(ngModel)]="user.email" name="email" required>
+                        <!--</input>-->
+                    </p>
+                    <p>
+                        <ion-label>Password:</ion-label>
+                        <input type="password" [(ngModel)]="user.password" name="password" required>
+                        <!--</input>-->
+                    </p>
+
+                    <div *ngIf="loginFail">
+                        <span class="text-md-danger">Login failed.</span>
+                    </div>
+                    <p>
+                        <button ion-button type="submit" [disabled]="!f.valid">Submit</button>
+                    </p>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div *ngIf="loggedIn">
+        <!-- class="show">-->
+        <!--<div class="label-md-secondary" text-left>-->
+        <!--<div>
+            <div></div>
+        </div>-->
+        <button [hidden]="isHistory" ion-button (click)="goToHistory()">History</button>
+        <button [hidden]="!isHistory" ion-button (click)="goToMainPage()">Main page</button>
+        <!--*ngIf="isHistory">-->
+
+        <!--</div>-->
+        <!--View-->
+        <div class="label-md-primary user" text-right>
+            Welcome, {{currUser.name}}!
+        </div>
+
+        <div *ngIf="!isHistory">
+            <form (ngSubmit)="setCityName()">
+                <ion-auto-complete #searchbar [dataProvider]="completeService">
+                    <!-- [debounceTime]="2000">-->
+                </ion-auto-complete>
+                <button ion-button icon-left block>
+                    <ion-icon name="search"></ion-icon>
+                    Load Weather
+                </button>
+            </form>
+            <ion-list no-lines>
+                <ion-item [hidden]="weatherItems.length > 0">
+                    <p>
+                        <strong>Weather data is not available</strong>
+                    </p>
+                </ion-item>
+                <ion-item *ngFor="let item of weatherItems">
+                    <p>
+                        <strong>{{item.Name}}:</strong> {{item.Value}}{{item.Ext}}
+                    </p>
+                </ion-item>
+            </ion-list>
+        </div>
+    </div>
+
+    <div *ngIf="loggedIn && !isHistory">
+        <!--class="show">-->
+        <!--<ion-grid>-->
+        <!--<ion-list no-lines>-->
+        <label class="label-md-primary" text-center>Your plants areas</label>
+        <div *ngFor="let doc of documents">
+            <!-- col-3>-->
             <ion-checkbox checked="false" [(ngModel)]="doc.checked"></ion-checkbox>
-        </ion-item>
-    </ion-list>
+            <!-- <ion-col></ion-col>-->
+            <!-- col-9>-->
+            <ion-input class="doc" [(ngModel)]="doc.name" name="title" readonly></ion-input>
+            <!-- <ion-col></ion-col>-->
+        </div>
+        <!--</ion-list>-->
+        <!--</ion-grid>-->
 
-    <button ion-button block (ngClick)="refrehsAreas()">Refresh</button>
+        <button ion-button block (click)="refreshAreas()">Refresh</button>
 
-    <form (ngSubmit)="sendWeather()">
-        <button ion-button block>
-            Send to plantsareas
-        </button>
-    </form>
+        <form (ngSubmit)="sendWeather()">
+            <button ion-button block>
+                Send Weather
+                <!--reas-->
+            </button>
+        </form>
+    </div>
 
 </ion-content>
 <ion-footer>

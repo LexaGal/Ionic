@@ -2,49 +2,109 @@ import { NgModule } from '@angular/core';
 import { Component, ViewChild } from '@angular/core';
 import { Geolocation, Keyboard } from 'ionic-native';
 import { Http, Response, Headers } from '@angular/http';
+import { FormsModule } from "@angular/forms";
+import { Storage } from "@ionic/storage";
+import * as createHash from '../../../node_modules/sha.js'; 
+//private Object //privatevar sha512 = createHash('sha512');//public sha: jsSHA,
+//'sha.js'; ////'crypto-js';//@types/jssha';//import {jsSHA} from '@types/jssha';//import {jsSHA} from '@types/jssha';
 
 import { WeatherProvider } from '../../providers/WeatherProvider';
 import { CompleteService } from '../../providers/CompleteService';
 import { MongolabDataApi } from '../../providers/MongolabDataApi';
 
-import { AlertController, LoadingController, NavController, Platform } from 'ionic-angular';
+import { AlertController, LoadingController, NavController, Platform, App } from 'ionic-angular';
 
 @Component({
     selector: 'page-home',
     templateUrl: 'home.html'
 })
+
 export class HomePage {
     degreeStr: string = ' degrees (C)';
     currentLoc: any = {};
 
     weatherItems: Array<any> = [];
+
     documents: Array<any> = [];
 
     @ViewChild('searchbar')
     searchbar: any;
 
-    private baseServerUr: string = "http://localhost:63958/";
+    loggedIn: boolean = false;
+    loginFail: boolean = false;
+
+    isHistory: boolean = false;
+
+    private baseServerUr: string = "http://qwertyuiop1.azurewebsites.net/";
 
     private apis: any = {
         setWeather: 'api/weather/set'
     }
 
+    user = {
+        email: 'galushkin.aleksey@gmail.com',
+        password: 'qYYfO8Di12345!'
+    }
+
+    currUser = {};
+
     constructor(public alertController: AlertController,
         public loadingCtrl: LoadingController,
         public platform: Platform,
         public navCtrl: NavController,
+        public form: FormsModule,
         public http: Http,
         public weather: WeatherProvider,
         public mongoApi: MongolabDataApi,
         public completeService: CompleteService) {
-
+        
         this.refreshAreas();
     }
+
+    goToMainPage() {
+        this.isHistory = false;
+    }
+
+    goToHistory() {
+        this.isHistory = true;
+    }
+
+    //._setDisableScroll(false);
+    //    this.app.setScrolling();
+    //}
 
     private handleError(res: Response | any) {
         console.error('Entering handleError');
         console.dir(res);
         return Promise.reject(res.message || res);
+    }
+
+    logInSubmit() {
+        var sha256 = createHash('sha256');
+        var hash = sha256.update(this.user.password, 'utf8').digest('hex');
+
+        //console.log(h);
+        //{//TemplateBased() {his}//logIn() {
+
+        this.mongoApi.loadUsers()
+            .then((data: any) => {
+                var users = data.json()
+                    .filter(u => {
+                        return u.email === this.user.email &&
+                            u.passwordToken === hash; //this.user.password;
+                    });
+                if (users.length === 1) {
+                    this.loggedIn = true;
+                    this.currUser = users[0];
+                } else {
+                    this.loginFail = true;
+                }
+            });
+    }
+
+    logOut() {
+        this.loggedIn = false;
+        this.currUser = this.user;
     }
 
     refreshAreas() {
@@ -57,7 +117,7 @@ export class HomePage {
                 });
             });
     }
-    
+
     sendWeather() {
         let docs = this.documents.filter(item => item.checked);
         let data = {
@@ -78,6 +138,10 @@ export class HomePage {
                 headers: headers
             })
             .toPromise()
+            .then((resp) => {
+                this.refreshAreas();
+                this.showAlert(resp.status === 200 ? 'Success' : resp.statusText, 'Data was sent', 'Plants App.', 'Good');
+            })
             .catch(this.handleError);
     }
 
@@ -86,7 +150,9 @@ export class HomePage {
         this.currentLoc = {
             'name': name ? name : this.searchbar.getValue()
         };
-        this.showCurrent();
+        if (this.currentLoc.name !== null) {
+            this.showCurrent();
+        }
     }
 
     onLink(url: string) {
@@ -145,7 +211,7 @@ export class HomePage {
                 loader.dismiss();
                 console.error('Error retrieving weather data');
                 console.dir(error);
-                this.showAlert(error);
+                this.showAlert(error, 'Error', 'Source: Open Weather', 'Close');
             }
             );
     }
@@ -179,12 +245,12 @@ export class HomePage {
         return tmpArray;
     }
 
-    showAlert(message: string) {
+    showAlert(message: string, title: string, source: string, buttonText: string) {
         let alert = this.alertController.create({
-            title: 'Error',
-            subTitle: 'Source: Weather Service',
+            title: title,
+            subTitle: source,
             message: message,
-            buttons: [{ text: 'Sorry' }]
+            buttons: [{ text: buttonText }]
         });
         alert.present();
     }

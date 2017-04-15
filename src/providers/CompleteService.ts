@@ -9,11 +9,12 @@ export class CompleteService implements AutoCompleteService {
     cities: Array<any> = [];
 
     constructor(public http: Http) {
-        this.http.get("/assets/city.list.json")
+        this.http.get("http://data.okfn.org/data/core/world-cities/r/world-cities.json")
             .toPromise()
             .then((data: any) => {
                 this.cities = [];
                 this.cities = data.json();
+                //alert(this.cities.length);
             })
             .catch(this.handleError);
     }
@@ -21,13 +22,20 @@ export class CompleteService implements AutoCompleteService {
     private handleError(res: Response | any) {
         console.error('Entering handleError');
         console.dir(res);
+        //alert(res);
         return Promise.reject(res.message || res);
     }
 
     getResults(keyword: string) {
-        return this.cities.filter(item => item.name
-            .toLowerCase()
-            .startsWith(keyword.toLowerCase()))
-        .map(item => ({ name: (item.name + ", " + item.country) }));        
+            
+        //setTimeout(() => {
+                let a = this.cities.filter(item => item.name
+                        .toLowerCase()
+                        .startsWith(keyword.toLowerCase()))
+                    .map(item => ({ name: (item.name + ", " + item.country) }));
+                //.debounceTime(100);
+                //alert(a.length);
+                return a;
+            //},2000);
     }
 }
