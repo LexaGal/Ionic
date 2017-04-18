@@ -4,8 +4,11 @@ import { Geolocation, Keyboard } from 'ionic-native';
 import { Http, Response, Headers } from '@angular/http';
 import { FormsModule } from "@angular/forms";
 import { Storage } from "@ionic/storage";
-import * as createHash from '../../../node_modules/sha.js'; 
-//private Object //privatevar sha512 = createHash('sha512');//public sha: jsSHA,
+import { DatePipe } from '@angular/common';
+
+import * as createHash from '../../../node_modules/sha.js';
+
+//sha512 = createHash('sha512');//public sha: jsSHA,
 //'sha.js'; ////'crypto-js';//@types/jssha';//import {jsSHA} from '@types/jssha';//import {jsSHA} from '@types/jssha';
 
 import { WeatherProvider } from '../../providers/WeatherProvider';
@@ -16,7 +19,8 @@ import { AlertController, LoadingController, NavController, Platform, App } from
 
 @Component({
     selector: 'page-home',
-    templateUrl: 'home.html'
+    templateUrl: 'home.html',
+    providers: [Storage, DatePipe]
 })
 
 export class HomePage {
@@ -34,6 +38,9 @@ export class HomePage {
     loginFail: boolean = false;
 
     isHistory: boolean = false;
+    historyItems: Array<any> = [];
+
+    currHistoryItemsData: Array<any> = [];
 
     private baseServerUr: string = "http://qwertyuiop1.azurewebsites.net/";
 
@@ -54,11 +61,11 @@ export class HomePage {
         public navCtrl: NavController,
         public form: FormsModule,
         public http: Http,
+        public store: Storage,
         public weather: WeatherProvider,
         public mongoApi: MongolabDataApi,
-        public completeService: CompleteService) {
-        
-        this.refreshAreas();
+        public completeService: CompleteService,
+        private datePipe: DatePipe) {
     }
 
     goToMainPage() {
@@ -66,7 +73,32 @@ export class HomePage {
     }
 
     goToHistory() {
-        this.isHistory = true;
+        //this.historyItems.clear();
+        this.historyItems = [];
+        this.store.forEach((v, k) => {
+            this.historyItems.push({ key: k, value: v });
+        }).then(() => {
+            this.isHistory = true;
+        });
+    }
+
+    cleanHistory() {
+        this.store.clear().then(() => {
+            this.showAlert('', 'All history was removed.', 'Plants App.', 'Good');
+        });
+        this.historyItems = [];
+        this.currHistoryItemsData = [];
+    }
+
+    viewItems(item) {
+        this.currHistoryItemsData = item.WeatherItems;
+    }
+
+    removeItems(item) {
+        this.store.remove(item.City.name + item.Date)
+            .then(() => this.showAlert('','Removed', '', 'Good'));
+        var elem = this.historyItems.filter(o => o.key === item.City.name + item.Date)[0];
+        var i = this.historyItems.indexOf(elem);                this.historyItems.splice(i, 1);            this.currHistoryItemsData = [];
     }
 
     //._setDisableScroll(false);
@@ -96,6 +128,8 @@ export class HomePage {
                 if (users.length === 1) {
                     this.loggedIn = true;
                     this.currUser = users[0];
+                    //this.getLocalWeather();
+                    this.refreshAreas();
                 } else {
                     this.loginFail = true;
                 }
@@ -108,6 +142,10 @@ export class HomePage {
     }
 
     refreshAreas() {
+        let loader = this.loadingCtrl.create({
+            content: "Refreshing your plants areas..."
+        });
+        loader.present();
         this.mongoApi.loadDocs()
             .then((data: any) => {
                 this.documents = [];
@@ -115,11 +153,23 @@ export class HomePage {
                 this.documents.forEach((doc) => {
                     doc['checked'] = false;
                 });
+                loader.dismiss();
             });
     }
 
     sendWeather() {
         let docs = this.documents.filter(item => item.checked);
+
+        if (docs.length === 0) {
+            this.showAlert('Please, select any areas', 'Data was not sent', 'Plants App.', 'Good');
+            return;
+        }
+
+        if (this.weatherItems.length === 0) {
+            this.showAlert('Please, load any weather', 'Data was not sent', 'Plants App.', 'Good');
+            return;
+        }
+
         let data = {
             AreasIds: docs.map(item => item._id),
             WeatherItems: this.weatherItems.map(item =>
@@ -133,6 +183,10 @@ export class HomePage {
         var headers = new Headers();
         headers.append('Content-Type', 'application/json');
 
+        let loader = this.loadingCtrl.create({
+            content: "Sending weather conditions..."
+        });
+        loader.present();
         this.http.post(this.baseServerUr + this.apis.setWeather,
             params, {
                 headers: headers
@@ -141,6 +195,17 @@ export class HomePage {
             .then((resp) => {
                 this.refreshAreas();
                 this.showAlert(resp.status === 200 ? 'Success' : resp.statusText, 'Data was sent', 'Plants App.', 'Good');
+                var weather = {
+                    City: this.currentLoc,
+                    WeatherItems: this.weatherItems,
+                    Date: Date.now()//this.datePipe.transform(Date.now(), 'yyyy-MM-dd, HH:mm')
+                }
+                //alert(.toLocaleString()); //""this.datePipe.transform(, 'yyyy-MM-dd, HH:mm'));
+                this.store.set(weather.City.name + weather.Date, weather)
+                    .then(() => {
+                        loader.dismiss();
+                    });
+                //console.log(this.store.keys().length);
             })
             .catch(this.handleError);
     }
@@ -159,16 +224,16 @@ export class HomePage {
         window.open(url);
     }
 
-    ionViewDidLoad() {
-        this.platform.ready()
-            .then(() => {
-                document.addEventListener('resume',
-                    () => {
-                        this.getLocalWeather();
-                    });
-                this.getLocalWeather();
-            });
-    }
+    //ionViewDidLoad() {
+    //    this.platform.ready()
+    //        .then(() => {
+    //            document.addEventListener('resume',
+    //                () => {
+    //                    this.getLocalWeather();
+    //                });
+    //            this.getLocalWeather();
+    //        });
+    //}
 
     refreshPage() {
         this.showCurrent();

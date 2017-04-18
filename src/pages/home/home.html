@@ -7,11 +7,6 @@
             <button ion-button (click)="refreshPage()">
                 <ion-icon name="refresh"></ion-icon>
             </button>
-            <div *ngIf="loggedIn">
-                <button ion-button (click)="logOut()">
-                    LogOut
-                </button>
-            </div>
         </ion-buttons>
     </ion-toolbar>
     <!-- <ion-label (ngModel)="user.name">!</ion-label>
@@ -54,17 +49,72 @@
         <!--<div>
             <div></div>
         </div>-->
-        <button [hidden]="isHistory" ion-button (click)="goToHistory()">History</button>
-        <button [hidden]="!isHistory" ion-button (click)="goToMainPage()">Main page</button>
-        <!--*ngIf="isHistory">-->
+        <!--{{item.Ext}}-->
 
-        <!--</div>-->
-        <!--View-->
+        <button [hidden]="isHistory" ion-button class="elem-line" (click)="goToHistory()">History</button>
+        <button [hidden]="!isHistory" ion-button class="elem-line" (click)="goToMainPage()">Main page</button>
+        <div *ngIf="loggedIn" class="elem-line right">
+            <button ion-button (click)="logOut()">
+                LogOut
+            </button>
+        </div>
+       
         <div class="label-md-primary user" text-right>
             Welcome, {{currUser.name}}!
         </div>
 
-        <div *ngIf="!isHistory">
+        <div class="margin-top" *ngIf="isHistory">
+            
+            <!--!isHistory ||--> 
+            
+            <ion-list no-lines>
+                <ion-item [hidden]="historyItems.length > 0">
+                    <p>
+                        <strong>History data is not available</strong>
+                    </p>
+                </ion-item>
+                <ion-item *ngFor="let item of historyItems">
+                    <div class="elem-line">
+                        <!-- >-->
+                        <strong>
+                            {{item.value.City.name}}
+                        </strong>
+                        <!--{{item.value.Date}}-->
+                        <!--|date:"dd/MM/y, HH:mm"}}-->
+                        <!--'medium'-->
+                    </div>
+                    <!----> 
+                    <button class="elem-line" (click)="viewItems(item.value)" ion-button icon-right>
+                        View info
+                    </button>
+                    <button class="elem-line"(click)="removeItems(item.value)" ion-button icon-right>
+                        Remove
+                    </button>
+                </ion-item>
+            </ion-list>
+          
+            <button [hidden]="historyItems.length === 0" ion-button block (click)="cleanHistory()">Clean history</button>
+            
+            <ion-list no-lines>
+                <ion-item *ngFor="let item of currHistoryItemsData">
+                    <p>
+                        <strong>{{item.Name}}:</strong> {{item.Value}}{{item.Ext}}
+                    </p>
+                </ion-item>
+            </ion-list>
+
+        </div>
+        
+        <!--{{item.WeatherItems[1].Value}} degrees (C)--><!--}}:-->
+        <!--<ion-list no-lines>
+            <ion-item *ngFor="let item of hItems">
+            </ion-item>
+        </ion-list>-->
+        <!--<strong></strong>-->
+        
+        <!--View istory-->
+
+        <div class="margin-top" *ngIf="!isHistory">
             <form (ngSubmit)="setCityName()">
                 <ion-auto-complete #searchbar [dataProvider]="completeService">
                     <!-- [debounceTime]="2000">-->
@@ -93,7 +143,7 @@
         <!--class="show">-->
         <!--<ion-grid>-->
         <!--<ion-list no-lines>-->
-        <label class="label-md-primary" text-center>Your plants areas</label>
+        <label class="label-md-primary large" text-center>Your plants areas</label>
         <div *ngFor="let doc of documents">
             <!-- col-3>-->
             <ion-checkbox checked="false" [(ngModel)]="doc.checked"></ion-checkbox>

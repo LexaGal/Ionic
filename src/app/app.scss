@@ -5,6 +5,22 @@ ion-app.md [padding] {
     margin-top: 5px;
 }
 
+strong {
+    font-weight: 800;
+}
+
+.elem-line {
+    display: inline-block;
+}
+
+.large {
+    font-size: 25px;
+}
+
+.right {
+    float: right;
+}
+
 // App Global Sass
 // --------------------------------------------------
 // Put style rules here that you want to apply globally. These

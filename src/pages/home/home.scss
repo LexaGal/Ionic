@@ -65,7 +65,7 @@ page-home {
             height: 18px;
         }
     }
-    
+
     .user {
         width: 62%;
         float: right;
@@ -78,6 +78,10 @@ page-home {
         border-radius: 14px;
         font-size: 14px;
         width: 100%;
+    }
+
+    .margin-top {
+        margin-top: 35px;
     }
 
     @-webkit-keyframes spin {

@@ -9,7 +9,8 @@ export class CompleteService implements AutoCompleteService {
     cities: Array<any> = [];
 
     constructor(public http: Http) {
-        this.http.get("http://data.okfn.org/data/core/world-cities/r/world-cities.json")
+        this.http.get("https://jsonblob.com/api/jsonBlob/d8631f89-239a-11e7-a0ba-afc15d8c6b02")
+            //("http://data.okfn.org/data/core/world-cities/r/world-cities.json")
             .toPromise()
             .then((data: any) => {
                 this.cities = [];
